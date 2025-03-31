@@ -28,6 +28,8 @@ urlpatterns = [
     path('registrar/', views.registrar_asistencia, name='registrar'),
     path('agregar-estudiante/', views.agregar_estudiante, name='agregar_estudiante'),
     path('exportar-pdf/', views.exportar_pdf_asistencia, name='exportar_pdf_asistencia'),
-
+    path('docentes/', views.docente_view, name='docentes'),
+    path('docentes/editar/<int:docente_id>/', views.editar_docente, name='editar_docente'),
+    path('docentes/eliminar/<int:docente_id>/', views.eliminar_docente, name='eliminar_docente'),
 ]
 

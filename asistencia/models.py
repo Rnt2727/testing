@@ -38,3 +38,17 @@ class RegistroAsistencia(models.Model):
 
     def __str__(self):
         return f"Asistencia de {self.estudiante} - {self.fecha.strftime('%d/%m/%Y %H:%M')}"
+
+class Docente(models.Model):
+    dni = models.CharField(max_length=8, unique=True)
+    nombre = models.CharField(max_length=100)
+    apellidos = models.CharField(max_length=100, blank=True, null=True)
+    # Se relaciona con el usuario de autenticación; este usuario contendrá su username y contraseña
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Docente"
+        verbose_name_plural = "Docentes"
+
+    def __str__(self):
+        return f"{self.nombre} {self.apellidos}"

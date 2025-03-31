@@ -1,4 +1,3 @@
-# docker-compose.yml
 version: '3.8'
 
 services:
@@ -7,10 +6,16 @@ services:
     ports:
       - "8000:8000"
     environment:
-      # Reemplaza "tu_clave_secreta" por una clave real o usa variables de entorno externas
       - SECRET_KEY="django-insecure-u#w-b@#0-xy!*=hcb-lmgb$wn909jn)dg567+4=qg$iblwrid^"
-    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
+      - DEBUG=False  
+      - DJANGO_ALLOWED_HOSTS=104.131.182.105,localhost,127.0.0.1
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120
     volumes:
       - .:/app
-      - ./asistencia/static:/app/asistencia/static:ro 
-    restart: always
+      - ./asistencia/static:/app/asistencia/static:ro
+    restart: unless-stopped 
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3  

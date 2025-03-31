@@ -6,7 +6,6 @@ from django.http import JsonResponse
 from .utils import enviar_sms_asistencia
 from django.db.models import Count
 from django.utils import timezone
-from datetime import timedelta
 
 from io import BytesIO
 from reportlab.lib.pagesizes import letter, landscape
@@ -20,7 +19,14 @@ from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
 from reportlab.lib import colors
 from reportlab.platypus import Image, SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer
 from django.contrib.staticfiles import finders
-
+from django.contrib.auth.hashers import make_password
+from .models import Estudiante, RegistroAsistencia, Docente
+from django.http import JsonResponse
+from .utils import enviar_sms_asistencia
+from django.db.models import Count
+from django.utils import timezone
+from datetime import timedelta
+from django.contrib.auth.models import User
 
 
 def login_view(request):
@@ -237,7 +243,10 @@ def exportar_pdf_asistencia(request):
         alignment=1,
         spaceAfter=24
     )
-    fecha_reporte = Paragraph(f"Generado el: {timezone.now().strftime('%d/%m/%Y %H:%M')} | Usuario: {request.user.username}", fecha_style)
+    
+    fecha_local = timezone.localtime(timezone.now()) # Convierte la hora actual a la zona America/Lima 
+    fecha_reporte = Paragraph(f"Generado el: {fecha_local.strftime('%d/%m/%Y %H:%M')} | Usuario: {request.user.username}", fecha_style)
+    
     story.append(fecha_reporte)
 
     registros = RegistroAsistencia.objects.select_related('estudiante', 'usuario').order_by('-fecha')
@@ -248,8 +257,9 @@ def exportar_pdf_asistencia(request):
 
     for i, reg in enumerate(registros, 1):
         estudiante_nombre = f"{reg.estudiante.nombre} {reg.estudiante.apellidos}"
-        fecha = reg.fecha.strftime("%d/%m/%Y")
-        hora = reg.fecha.strftime("%H:%M")
+        local_fecha = timezone.localtime(reg.fecha)  # Convierte la fecha a la zona local
+        fecha = local_fecha.strftime("%d/%m/%Y")
+        hora = local_fecha.strftime("%H:%M")
         notificacion = "Sí" if reg.notificacion_enviada else "No"
         usuario = reg.usuario.get_full_name() or reg.usuario.username
         data.append([
@@ -301,3 +311,66 @@ def exportar_pdf_asistencia(request):
     response['Content-Disposition'] = 'attachment; filename="reporte_asistencia_detallado.pdf"'
     response.write(pdf)
     return response
+
+
+@login_required
+def docente_view(request):
+    error_message = None
+    if request.method == 'POST':
+        # Si se envía docente_id se entiende que es una actualización
+        if request.POST.get('docente_id'):
+            docente = Docente.objects.get(id=request.POST.get('docente_id'))
+            docente.dni = request.POST.get('dni')
+            docente.nombre = request.POST.get('nombre')
+            docente.apellidos = request.POST.get('apellidos')
+            docente.usuario.username = request.POST.get('username')
+            new_password = request.POST.get('password')
+            if new_password:
+                docente.usuario.password = make_password(new_password)
+            docente.usuario.save()
+            docente.save()
+        else:
+            # Creación de docente
+            dni = request.POST.get('dni')
+            nombre = request.POST.get('nombre')
+            apellidos = request.POST.get('apellidos')
+            username = request.POST.get('username')
+            password = request.POST.get('password')
+            if not dni or not nombre or not username or not password:
+                error_message = "DNI, Nombre, Usuario y Contraseña son campos requeridos."
+            elif User.objects.filter(username=username).exists():
+                error_message = "El usuario ingresado ya existe."
+            else:
+                # Crear el usuario y asignarlo al docente
+                user = User.objects.create(username=username, password=make_password(password))
+                Docente.objects.create(
+                    dni=dni,
+                    nombre=nombre,
+                    apellidos=apellidos,
+                    usuario=user
+                )
+    docentes = Docente.objects.all()
+    return render(request, 'asistencia/docente.html', {'docentes': docentes, 'error_message': error_message})
+
+@login_required
+def editar_docente(request, docente_id):
+    docente = Docente.objects.get(id=docente_id)
+    if request.method == "POST":
+        docente.dni = request.POST.get('dni')
+        docente.nombre = request.POST.get('nombre')
+        docente.apellidos = request.POST.get('apellidos')
+        docente.usuario.username = request.POST.get('username')
+        new_password = request.POST.get('password')
+        if new_password:
+            docente.usuario.password = make_password(new_password)
+        docente.usuario.save()
+        docente.save()
+        return redirect('docentes')
+    return render(request, 'asistencia/editar_docente.html', {'docente': docente})
+
+@login_required
+def eliminar_docente(request, docente_id):
+    docente = Docente.objects.get(id=docente_id)
+    docente.usuario.delete()  # Eliminar también el usuario
+    docente.delete()
+    return redirect('docentes')
