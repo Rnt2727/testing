@@ -1,0 +1,16 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # Reemplaza "tu_clave_secreta" por una clave real o usa variables de entorno externas
+      - SECRET_KEY="django-insecure-u#w-b@#0-xy!*=hcb-lmgb$wn909jn)dg567+4=qg$iblwrid^"
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+      - ./asistencia/static:/app/asistencia/static:ro 
+    restart: always

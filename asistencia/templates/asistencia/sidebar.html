@@ -1,0 +1,74 @@
+{% load static %}
+
+<div class="sidebar">
+    <div class="sidebar-header">
+        <img src="https://scontent.flim6-4.fna.fbcdn.net/v/t1.6435-9/170508169_3524127621024678_1898352335121969967_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeEQLgjE-08M2E2ZW10xsBog6iF6ZqLy24PqIXpmovLbgzS_upwFqU1RwSkURKZKF6P6w5Nu3o5bCSwqFwPEt-Wp&_nc_ohc=bvNdlIy0pi0Q7kNvgGldiyn&_nc_oc=Adn06K1OKnVL23wsOd3fsmBYOXmCa4f4yIhqjLKVrXwKott-kGeBXwU-2rSsU_yF4W4&_nc_zt=23&_nc_ht=scontent.flim6-4.fna&_nc_gid=SFxe-LIo-7ZvbST2dlGScQ&oh=00_AYEhjpnMfmt1T2QUyXdLaCBJUqvpdzhEsQf6Xk6D-ara5Q&oe=680CFC77" alt="Logo Colegio" class="school-logo">
+        <h3 class="school-name">Colegio Adventista Jose Pardo</h3>
+        <p class="school-motto">Educación de Calidad</p>
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="sidebar-profile">
+            <div class="user-profile">
+                <img src="{% static 'images/perfil.jpeg' %}" alt="Avatar" class="user-avatar">
+                <div class="user-info">
+                    <span>{{ user.username }}</span>
+                </div>
+            </div>
+            <a href="{% url 'logout' %}" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="sidebar-menu">
+        <div class="menu-section">
+            <div class="menu-title">Principal</div>
+            <a href="{% url 'dashboard' %}" class="menu-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+        
+        <div class="menu-section">
+            <div class="menu-title">Asistencia</div>
+            <a href="{% url 'scanner' %}" class="menu-item {% if request.resolver_match.url_name == 'scanner' %}active{% endif %}">
+                <i class="fas fa-calendar-check"></i>
+                <span>Registrar Asistencia</span>
+            </a>
+            <a href="#" class="menu-item">
+                <i class="fas fa-history"></i>
+                <span>Historial</span>
+            </a>
+        </div>
+        
+        <div class="menu-section">
+            <div class="menu-title">Estudiantes</div>
+            <a href="#" class="menu-item">
+                <i class="fas fa-users"></i>
+                <span>Lista de Estudiantes</span>
+            </a>
+            <a href="{% url 'agregar_estudiante' %}" class="menu-item {% if request.resolver_match.url_name == 'agregar_estudiante' %}active{% endif %}">
+                <i class="fas fa-user-plus"></i>
+                <span>Agregar Estudiante</span>
+            </a>
+            <a href="#" class="menu-item">
+                <i class="fas fa-id-card"></i>
+                <span>Carnets</span>
+            </a>
+        </div>
+        
+        <div class="menu-section">
+            <div class="menu-title">Reportes</div>
+            <a href="#" class="menu-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Estadísticas</span>
+            </a>
+            <a href="{% url 'exportar_pdf_asistencia' %}" class="menu-item">
+                <i class="fas fa-file-export"></i>
+                <span>Exportar Pdf</span>
+            </a>
+        </div>
+    </div>
+</div>

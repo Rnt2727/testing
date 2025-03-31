@@ -1,0 +1,127 @@
+{% extends 'asistencia/base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+  
+    <div class="main-content">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Agregar Nuevo Estudiante</h2>
+                    </div>
+                    <div class="card-body">
+                        {% if error_message %}
+                        <div class="alert alert-danger mb-4">
+                            {{ error_message }}
+                        </div>
+                        {% endif %}
+                        
+                        <form id="estudianteForm" method="POST" action="{% url 'agregar_estudiante' %}">
+                            {% csrf_token %}
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="dni" class="form-label">DNI</label>
+                                    <input type="text" class="form-control" id="dni" name="dni" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="nombre" class="form-label">Nombres</label>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="apellidos" class="form-label">Apellidos</label>
+                                    <input type="text" class="form-control" id="apellidos" name="apellidos">
+                                </div>
+                                <div class="form-group">
+                                    <label for="nombre_padre" class="form-label">Nombre del Padre/Madre</label>
+                                    <input type="text" class="form-control" id="nombre_padre" name="nombre_padre">
+                                </div>
+                                <div class="form-group">
+                                    <label for="celular_padre" class="form-label">Celular del Padre/Madre</label>
+                                    <input type="number" class="form-control" id="celular_padre" name="celular_padre">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="nivel" class="form-label">Nivel</label>
+                                    <select id="nivel" name="nivel" class="form-control" required>
+                                        <option value="primaria" selected>Primaria</option>
+                                        <option value="secundaria">Secundaria</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="grado" class="form-label">Grado</label>
+                                    <input type="number" class="form-control" id="grado" name="grado" min="1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="seccion" class="form-label">Sección</label>
+                                    <input type="text" class="form-control" id="seccion" name="seccion" maxlength="1" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="activo" name="activo" checked>
+                                <label class="form-check-label" for="activo">Estudiante Activo</label>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Guardar Estudiante
+                                </button>
+                            </div>
+                        </form>
+                        <div id="resultado" class="alert mt-3" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('estudianteForm');
+    const resultadoDiv = document.getElementById('resultado');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        resultadoDiv.textContent = 'Procesando...';
+        resultadoDiv.className = 'alert alert-info mt-3';
+        resultadoDiv.style.display = 'block';
+        
+        const formData = new FormData(form);
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Error en la respuesta');
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                resultadoDiv.textContent = `Estudiante ${data.nombre} registrado exitosamente`;
+                resultadoDiv.className = 'alert alert-success mt-3';
+                form.reset();
+                setTimeout(() => {
+                    resultadoDiv.style.display = 'none';
+                    document.getElementById('dni').focus();
+                }, 3000);
+            } else {
+                throw new Error(data.message || 'Error al registrar');
+            }
+        })
+        .catch(error => {
+            resultadoDiv.textContent = error.message;
+            resultadoDiv.className = 'alert alert-danger mt-3';
+        });
+    });
+});
+</script>
+{% endblock %}
